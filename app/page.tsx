@@ -302,8 +302,19 @@ export default function Home() {
 
       {/* Header Nav */}
       <nav style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "20px 40px", display: "flex", justifyContent: "space-between", zIndex: 10 }}>
-        <div style={{ fontWeight: 800, fontSize: "1.2rem", letterSpacing: "1px", display: "flex", alignItems: "center", gap: 8 }}>
-          <Sparkles size={20} color="#6366f1" /> NotReplaced<span style={{ color: "#6366f1" }}>.ai</span>
+        <div style={{ fontWeight: 800, fontSize: "1.3rem", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 12 }}>
+          <img 
+            src="/logo-notreplaced-ai.png" 
+            alt="NotReplaced Logo" 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              objectFit: "contain",
+              mixBlendMode: "screen", // Menghilangkan background hitam!
+              filter: "drop-shadow(0 0 10px rgba(34, 211, 238, 0.5))" // Menambah efek glow
+            }} 
+          /> 
+          <div>NotReplaced<span style={{ color: "#6366f1" }}>.ai</span></div>
         </div>
         <button 
           onClick={() => setShowDisclosure(true)}
