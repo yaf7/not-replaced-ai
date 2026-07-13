@@ -37,7 +37,7 @@ To run this project locally, follow these steps:
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/not-replaced-ai.git
+git clone https://github.com/yaf7/not-replaced-ai.git
 cd not-replaced-ai
 ```
 
