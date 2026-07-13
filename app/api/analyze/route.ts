@@ -19,7 +19,8 @@ Return a JSON response with EXACTLY this structure (no markdown, no code blocks,
     "percentage": <number 0-100>,
     "verdict": "<one of: SAFE, LOW RISK, MODERATE, HIGH RISK, CRITICAL>",
     "summary": "<2-3 sentence explanation of why this percentage>",
-    "timeline": "<specific prediction about what changes in 1, 3, and 5 years>"
+    "timeline": "<specific prediction about what changes in 1, 3, and 5 years>",
+    "sources": "<1 sentence citing aggregated data sources, e.g., 'Aggregated from World Economic Forum & McKinsey 2025 AI Impact reports'>"
   },
   "ai_copilot": {
     "tools": [
@@ -65,7 +66,7 @@ Return a JSON response with EXACTLY this structure (no markdown, no code blocks,
   ]
 }
 
-Provide exactly 4 AI tools and 4 human edge skills. Be specific, practical, and data-informed. Base the threat percentage on real industry research and trends.`;
+Provide exactly 4 AI tools and 4 human edge skills. Be specific, practical, and data-informed. Base the threat percentage on real industry research and trends, and make sure to cite realistic reports in the 'sources' field.`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`,

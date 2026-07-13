@@ -10,6 +10,7 @@ interface AnalysisResult {
     verdict: string;
     summary: string;
     timeline: string;
+    sources?: string;
   };
   ai_copilot: {
     tools: { name: string; description: string; category: string }[];
@@ -180,7 +181,31 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState("");
+  const [history, setHistory] = useState<AnalysisResult[]>([]);
+  const [showDisclosure, setShowDisclosure] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
+
+  // Load history on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("notreplaced_history");
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse history", e);
+      }
+    }
+  }, []);
+
+  const saveToHistory = (newResult: AnalysisResult) => {
+    setHistory(prev => {
+      // Avoid exact duplicates
+      const filtered = prev.filter(h => h.profession_title !== newResult.profession_title);
+      const newHistory = [newResult, ...filtered].slice(0, 5); // Keep last 5
+      localStorage.setItem("notreplaced_history", JSON.stringify(newHistory));
+      return newHistory;
+    });
+  };
 
   const analyze = useCallback(async () => {
     if (!profession.trim()) return;
@@ -194,16 +219,28 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ profession: profession.trim() }),
       });
-      if (!res.ok) throw new Error("Analysis failed");
+      if (!res.ok) {
+        if (res.status === 429) {
+          throw new Error("Rate limit exceeded. Please wait a moment and try again.");
+        }
+        throw new Error("Analysis failed. Please try again.");
+      }
       const data = await res.json();
       setResult(data);
+      saveToHistory(data);
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-    } catch {
-      setError("Failed to analyze. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Failed to analyze. Please try again.");
     } finally {
       setLoading(false);
     }
   }, [profession]);
+
+  const loadFromHistory = (item: AnalysisResult) => {
+    setResult(item);
+    setProfession(item.profession_title);
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !loading) analyze();
@@ -229,8 +266,6 @@ export default function Home() {
     }
   };
 
-  const animatedPct = useCountUp(result?.threat_level.percentage ?? 0);
-
   return (
     <>
       <ParticlesBackground />
@@ -239,13 +274,54 @@ export default function Home() {
       <div className="orb orb-2" />
       <div className="orb orb-3" />
 
+      {/* AI Disclosure Modal */}
+      {showDisclosure && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(5,5,16,0.8)", backdropFilter: "blur(10px)" }}>
+          <div className="glass-card fade-in" style={{ maxWidth: 600, width: "100%", padding: 32, position: "relative" }}>
+            <button 
+              onClick={() => setShowDisclosure(false)} 
+              style={{ position: "absolute", top: 20, right: 20, background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "1.5rem" }}
+            >
+              ✕
+            </button>
+            <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: 16 }}>🤖 AI Usage & Methodology</h2>
+            <div style={{ color: "#94a3b8", fontSize: "0.95rem", lineHeight: 1.6, display: "flex", flexDirection: "column", gap: 12 }}>
+              <p><strong>Hoobit Hacks 2026 Disclosure:</strong> To comply with the hackathon guidelines, this outlines exactly how AI is utilized within <em>NotReplaced.ai</em>.</p>
+              
+              <p><strong>1. Data Generation & Analysis</strong><br/>
+              The core analysis engine uses the <strong>Google Gemini API</strong> (gemini-3-flash-preview). When a user enters a profession, it is sent to the LLM via a strictly formatted prompt. The threat percentages, required skills, and timelines are AI-generated estimations based on aggregated patterns from global economic trends, tech publications, and known automation capabilities.</p>
+              
+              <p><strong>2. Data Citations</strong><br/>
+              To provide realistic context, Gemini is instructed to cite real-world studies (e.g., World Economic Forum, Goldman Sachs, or McKinsey reports) in the "Sources" section of the results. <em>Note: As these are LLM-generated summaries, specific percentages may be illustrative.</em></p>
+              
+              <p><strong>3. Development Process</strong><br/>
+              This platform was architected and engineered by <strong>Deyafa Arsetya</strong>. AI was utilized during the coding phase (as permitted in the rules) to accelerate UI styling, SVG animations, and API route generation. <strong>AI was NOT used</strong> to conceptualize the core idea or write the presentation scripts.</p>
+            </div>
+            <button onClick={() => setShowDisclosure(false)} className="btn-primary" style={{ width: "100%", marginTop: 24 }}>Acknowledge</button>
+          </div>
+        </div>
+      )}
+
+      {/* Header Nav */}
+      <nav style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "20px 40px", display: "flex", justifyContent: "space-between", zIndex: 10 }}>
+        <div style={{ fontWeight: 800, fontSize: "1.2rem", letterSpacing: "1px" }}>NotReplaced<span style={{ color: "#6366f1" }}>.ai</span></div>
+        <button 
+          onClick={() => setShowDisclosure(true)}
+          style={{ background: "transparent", border: "1px solid rgba(99,102,241,0.3)", color: "#e2e8f0", padding: "6px 16px", borderRadius: 99, fontSize: "0.85rem", cursor: "pointer", transition: "all 0.2s" }}
+          onMouseEnter={(e) => e.currentTarget.style.background = "rgba(99,102,241,0.1)"}
+          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+        >
+          AI Disclosure
+        </button>
+      </nav>
+
       <div style={{ position: "relative", zIndex: 1, minHeight: "100vh" }}>
         {/* Hero Section */}
-        <header style={{ textAlign: "center", padding: "80px 20px 40px", maxWidth: 800, margin: "0 auto" }}>
+        <header style={{ textAlign: "center", padding: "100px 20px 40px", maxWidth: 800, margin: "0 auto" }}>
           <div className="fade-in">
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 20px", borderRadius: 99, background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)", marginBottom: 24, fontSize: "0.85rem", color: "#94a3b8" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 10px #10b981" }} />
-              Powered by Google Gemini AI
+              Powered by Google Gemini
             </div>
           </div>
 
@@ -291,26 +367,51 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Example chips */}
-          <div className="fade-in" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, marginTop: 20 }}>
-            {["Software Engineer", "Accountant", "Graphic Designer", "Teacher", "Doctor"].map((ex) => (
-              <button
-                key={ex}
-                onClick={() => setProfession(ex)}
-                style={{
-                  padding: "6px 14px", borderRadius: 99,
-                  background: "rgba(99,102,241,0.06)",
-                  border: "1px solid rgba(99,102,241,0.15)",
-                  color: "#94a3b8", fontSize: "0.8rem",
-                  cursor: "pointer", transition: "all 0.3s ease",
-                  fontFamily: "'Outfit', sans-serif",
-                }}
-                onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "rgba(99,102,241,0.15)"; (e.target as HTMLElement).style.color = "#e2e8f0"; }}
-                onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "rgba(99,102,241,0.06)"; (e.target as HTMLElement).style.color = "#94a3b8"; }}
-              >
-                {ex}
-              </button>
-            ))}
+          {/* Recent History / Examples */}
+          <div className="fade-in" style={{ marginTop: 24 }}>
+            {history.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: "0.8rem", color: "#64748b", textTransform: "uppercase", letterSpacing: 1 }}>Recent Analyses</span>
+                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
+                  {history.map((h, i) => (
+                    <button
+                      key={i}
+                      onClick={() => loadFromHistory(h)}
+                      style={{
+                        padding: "6px 14px", borderRadius: 99,
+                        background: "rgba(34,211,238,0.06)",
+                        border: "1px solid rgba(34,211,238,0.15)",
+                        color: "#e2e8f0", fontSize: "0.8rem",
+                        cursor: "pointer", transition: "all 0.3s ease",
+                      }}
+                    >
+                      🕒 {h.profession_title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
+                {["Software Engineer", "Accountant", "Graphic Designer", "Teacher", "Doctor"].map((ex) => (
+                  <button
+                    key={ex}
+                    onClick={() => setProfession(ex)}
+                    style={{
+                      padding: "6px 14px", borderRadius: 99,
+                      background: "rgba(99,102,241,0.06)",
+                      border: "1px solid rgba(99,102,241,0.15)",
+                      color: "#94a3b8", fontSize: "0.8rem",
+                      cursor: "pointer", transition: "all 0.3s ease",
+                      fontFamily: "'Outfit', sans-serif",
+                    }}
+                    onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "rgba(99,102,241,0.15)"; (e.target as HTMLElement).style.color = "#e2e8f0"; }}
+                    onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "rgba(99,102,241,0.06)"; (e.target as HTMLElement).style.color = "#94a3b8"; }}
+                  >
+                    {ex}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </header>
 
@@ -375,11 +476,20 @@ export default function Home() {
                       </div>
                     </div>
                     <p style={{ color: "#94a3b8", lineHeight: 1.7, marginBottom: 12 }}>{result.threat_level.summary}</p>
-                    <div style={{ padding: "12px 16px", borderRadius: 12, background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.1)" }}>
-                      <p style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-                        <strong style={{ color: "#e2e8f0" }}>📅 Timeline: </strong>
-                        {result.threat_level.timeline}
-                      </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div style={{ padding: "12px 16px", borderRadius: 12, background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.1)" }}>
+                        <p style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
+                          <strong style={{ color: "#e2e8f0" }}>📅 Timeline: </strong>
+                          {result.threat_level.timeline}
+                        </p>
+                      </div>
+                      {result.threat_level.sources && (
+                        <div style={{ padding: "8px 16px", borderRadius: 12, background: "rgba(16,185,129,0.05)", border: "1px dashed rgba(16,185,129,0.2)" }}>
+                          <p style={{ fontSize: "0.8rem", color: "#64748b", fontStyle: "italic" }}>
+                            📊 <strong>Data Intelligence:</strong> {result.threat_level.sources}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -455,7 +565,7 @@ export default function Home() {
             {/* Footer disclaimer */}
             <div className="fade-in" style={{ textAlign: "center", marginTop: 40, padding: "20px", color: "#64748b", fontSize: "0.8rem" }}>
               <p>⚡ Analysis powered by Google Gemini AI. Results are AI-generated estimates based on current industry trends.</p>
-              <p style={{ marginTop: 4 }}>Built for <strong>Hoobit Hacks 2026</strong> — AI Apocalypse Theme</p>
+              <p style={{ marginTop: 4 }}>Engineered by <strong>Deyafa Arsetya</strong> ⚡ for <strong>Hoobit Hacks 2026</strong></p>
             </div>
           </div>
         )}
@@ -467,7 +577,7 @@ export default function Home() {
               {[
                 { icon: "⚡", label: "Instant Analysis", desc: "Results in seconds" },
                 { icon: "🧠", label: "AI-Powered", desc: "Google Gemini" },
-                { icon: "🎯", label: "Personalized", desc: "Tailored advice" },
+                { icon: "🎯", label: "Data-Informed", desc: "Based on trends" },
               ].map((f, i) => (
                 <div key={i} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: "2rem", marginBottom: 8 }}>{f.icon}</div>
@@ -477,7 +587,7 @@ export default function Home() {
               ))}
             </div>
             <p style={{ fontSize: "0.8rem" }}>
-              Built for <strong>Hoobit Hacks 2026</strong> — AI Apocalypse Theme
+              Engineered by <strong>Deyafa Arsetya</strong> ⚡ for <strong>Hoobit Hacks 2026</strong>
             </p>
           </footer>
         )}
