@@ -1,6 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { 
+  Search, Zap, Clock, Brain, Target, ShieldCheck, 
+  TriangleAlert, Database, Bot, Sparkles, Map,
+  PenTool, BarChart2, Settings, Palette, Code, 
+  MessageSquare, TrendingUp, Heart, Handshake, 
+  Lightbulb, Shield, Eye, Share2, RotateCcw
+} from "lucide-react";
 
 // Types
 interface AnalysisResult {
@@ -25,20 +32,31 @@ interface AnalysisResult {
 
 // Icon components
 function SkillIcon({ icon }: { icon: string }) {
-  const icons: Record<string, string> = {
-    brain: "🧠", heart: "❤️", handshake: "🤝",
-    lightbulb: "💡", shield: "🛡️", eye: "👁️",
-  };
-  return <span>{icons[icon] || "⭐"}</span>;
+  const props = { size: 20, strokeWidth: 2 };
+  switch (icon.toLowerCase()) {
+    case "brain": return <Brain {...props} />;
+    case "heart": return <Heart {...props} />;
+    case "handshake": return <Handshake {...props} />;
+    case "lightbulb": return <Lightbulb {...props} />;
+    case "shield": return <Shield {...props} />;
+    case "eye": return <Eye {...props} />;
+    default: return <Sparkles {...props} />;
+  }
 }
 
 function CategoryIcon({ category }: { category: string }) {
-  const icons: Record<string, string> = {
-    Content: "📝", Analytics: "📊", Automation: "⚙️",
-    Design: "🎨", Code: "💻", Communication: "💬",
-    Research: "🔍", Marketing: "📈",
-  };
-  return <span>{icons[category] || "🔧"}</span>;
+  const props = { size: 18, strokeWidth: 2 };
+  switch (category.toLowerCase()) {
+    case "content": return <PenTool {...props} />;
+    case "analytics": return <BarChart2 {...props} />;
+    case "automation": return <Settings {...props} />;
+    case "design": return <Palette {...props} />;
+    case "code": return <Code {...props} />;
+    case "communication": return <MessageSquare {...props} />;
+    case "research": return <Search {...props} />;
+    case "marketing": return <TrendingUp {...props} />;
+    default: return <Settings {...props} />;
+  }
 }
 
 // Threat gauge SVG component
@@ -155,27 +173,6 @@ function ParticlesBackground() {
   return <canvas ref={canvasRef} className="particles-canvas" />;
 }
 
-// Counter animation hook
-function useCountUp(target: number, duration = 2000) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (target === 0) return;
-    let start = 0;
-    const startTime = Date.now();
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      start = Math.round(eased * target);
-      setCount(start);
-      if (progress < 1) requestAnimationFrame(animate);
-    };
-    const timer = setTimeout(() => requestAnimationFrame(animate), 400);
-    return () => clearTimeout(timer);
-  }, [target, duration]);
-  return count;
-}
-
 export default function Home() {
   const [profession, setProfession] = useState("");
   const [loading, setLoading] = useState(false);
@@ -199,9 +196,8 @@ export default function Home() {
 
   const saveToHistory = (newResult: AnalysisResult) => {
     setHistory(prev => {
-      // Avoid exact duplicates
       const filtered = prev.filter(h => h.profession_title !== newResult.profession_title);
-      const newHistory = [newResult, ...filtered].slice(0, 5); // Keep last 5
+      const newHistory = [newResult, ...filtered].slice(0, 5);
       localStorage.setItem("notreplaced_history", JSON.stringify(newHistory));
       return newHistory;
     });
@@ -257,7 +253,7 @@ export default function Home() {
 
   const shareResult = () => {
     if (!result) return;
-    const text = `🤖 My job as "${result.profession_title}" has a ${result.threat_level.percentage}% AI replacement risk!\n\nVerdict: ${result.threat_level.verdict}\n\nCheck yours at NotReplaced.ai`;
+    const text = `My job as "${result.profession_title}" has a ${result.threat_level.percentage}% AI replacement risk.\n\nVerdict: ${result.threat_level.verdict}\n\nCheck yours at NotReplaced.ai`;
     if (navigator.share) {
       navigator.share({ title: "NotReplaced.ai", text });
     } else {
@@ -284,7 +280,9 @@ export default function Home() {
             >
               ✕
             </button>
-            <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: 16 }}>🤖 AI Usage & Methodology</h2>
+            <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+              <ShieldCheck size={28} color="#6366f1" /> Methodology Disclosure
+            </h2>
             <div style={{ color: "#94a3b8", fontSize: "0.95rem", lineHeight: 1.6, display: "flex", flexDirection: "column", gap: 12 }}>
               <p><strong>Hoobit Hacks 2026 Disclosure:</strong> To comply with the hackathon guidelines, this outlines exactly how AI is utilized within <em>NotReplaced.ai</em>.</p>
               
@@ -304,14 +302,16 @@ export default function Home() {
 
       {/* Header Nav */}
       <nav style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "20px 40px", display: "flex", justifyContent: "space-between", zIndex: 10 }}>
-        <div style={{ fontWeight: 800, fontSize: "1.2rem", letterSpacing: "1px" }}>NotReplaced<span style={{ color: "#6366f1" }}>.ai</span></div>
+        <div style={{ fontWeight: 800, fontSize: "1.2rem", letterSpacing: "1px", display: "flex", alignItems: "center", gap: 8 }}>
+          <Sparkles size={20} color="#6366f1" /> NotReplaced<span style={{ color: "#6366f1" }}>.ai</span>
+        </div>
         <button 
           onClick={() => setShowDisclosure(true)}
-          style={{ background: "transparent", border: "1px solid rgba(99,102,241,0.3)", color: "#e2e8f0", padding: "6px 16px", borderRadius: 99, fontSize: "0.85rem", cursor: "pointer", transition: "all 0.2s" }}
+          style={{ background: "transparent", border: "1px solid rgba(99,102,241,0.3)", color: "#e2e8f0", padding: "6px 16px", borderRadius: 99, fontSize: "0.85rem", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 6 }}
           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(99,102,241,0.1)"}
           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
         >
-          AI Disclosure
+          <ShieldCheck size={14} /> Methodology
         </button>
       </nav>
 
@@ -340,7 +340,9 @@ export default function Home() {
           {/* Input Section */}
           <div className="fade-in" style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ position: "relative" }}>
-              <span style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", fontSize: "1.2rem", opacity: 0.5 }}>🔍</span>
+              <span style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", color: "#64748b" }}>
+                <Search size={20} />
+              </span>
               <input
                 id="profession-input"
                 className="input-field"
@@ -358,11 +360,18 @@ export default function Home() {
               className="btn-primary"
               onClick={analyze}
               disabled={loading || !profession.trim()}
+              style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}
             >
               {loading ? (
-                <span className="scanning-text">⚡ Scanning your future...</span>
+                <>
+                  <Zap size={18} className="animate-pulse" />
+                  <span className="scanning-text">Scanning your future...</span>
+                </>
               ) : (
-                "⚡ Analyze My Career"
+                <>
+                  <Zap size={18} />
+                  Analyze My Career
+                </>
               )}
             </button>
           </div>
@@ -383,9 +392,10 @@ export default function Home() {
                         border: "1px solid rgba(34,211,238,0.15)",
                         color: "#e2e8f0", fontSize: "0.8rem",
                         cursor: "pointer", transition: "all 0.3s ease",
+                        display: "flex", alignItems: "center", gap: 6
                       }}
                     >
-                      🕒 {h.profession_title}
+                      <Clock size={12} /> {h.profession_title}
                     </button>
                   ))}
                 </div>
@@ -435,8 +445,8 @@ export default function Home() {
         {/* Error */}
         {error && (
           <div style={{ textAlign: "center", padding: "40px 20px" }}>
-            <div style={{ display: "inline-block", padding: "16px 32px", borderRadius: 16, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444" }}>
-              ⚠️ {error}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "16px 32px", borderRadius: 16, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444" }}>
+              <TriangleAlert size={18} /> {error}
             </div>
           </div>
         )}
@@ -453,8 +463,12 @@ export default function Home() {
                 </span>
               </h2>
               <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
-                <button className="btn-share" onClick={shareResult}>📤 Share Result</button>
-                <button className="btn-share" onClick={() => { setResult(null); setProfession(""); }}>🔄 New Analysis</button>
+                <button className="btn-share" onClick={shareResult} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Share2 size={16} /> Share Result
+                </button>
+                <button className="btn-share" onClick={() => { setResult(null); setProfession(""); }} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <RotateCcw size={16} /> New Analysis
+                </button>
               </div>
             </div>
 
@@ -467,7 +481,9 @@ export default function Home() {
                   <ThreatGauge percentage={result.threat_level.percentage} verdict={result.threat_level.verdict} />
                   <div style={{ flex: 1, minWidth: 250 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                      <div className="section-icon" style={{ background: "rgba(239,68,68,0.1)" }}>⚠️</div>
+                      <div className="section-icon" style={{ background: "rgba(239,68,68,0.1)" }}>
+                        <TriangleAlert color="#ef4444" size={20} />
+                      </div>
                       <div>
                         <h3 style={{ fontSize: "1.3rem", fontWeight: 700 }}>Threat Level</h3>
                         <span className={`verdict-badge ${getVerdictClass(result.threat_level.verdict)}`}>
@@ -477,16 +493,18 @@ export default function Home() {
                     </div>
                     <p style={{ color: "#94a3b8", lineHeight: 1.7, marginBottom: 12 }}>{result.threat_level.summary}</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      <div style={{ padding: "12px 16px", borderRadius: 12, background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.1)" }}>
+                      <div style={{ display: "flex", gap: 12, padding: "12px 16px", borderRadius: 12, background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.1)" }}>
+                        <Clock size={16} color="#6366f1" style={{ flexShrink: 0, marginTop: 2 }} />
                         <p style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-                          <strong style={{ color: "#e2e8f0" }}>📅 Timeline: </strong>
+                          <strong style={{ color: "#e2e8f0" }}>Timeline: </strong>
                           {result.threat_level.timeline}
                         </p>
                       </div>
                       {result.threat_level.sources && (
-                        <div style={{ padding: "8px 16px", borderRadius: 12, background: "rgba(16,185,129,0.05)", border: "1px dashed rgba(16,185,129,0.2)" }}>
+                        <div style={{ display: "flex", gap: 12, padding: "8px 16px", borderRadius: 12, background: "rgba(16,185,129,0.05)", border: "1px dashed rgba(16,185,129,0.2)" }}>
+                          <Database size={14} color="#10b981" style={{ flexShrink: 0, marginTop: 2 }} />
                           <p style={{ fontSize: "0.8rem", color: "#64748b", fontStyle: "italic" }}>
-                            📊 <strong>Data Intelligence:</strong> {result.threat_level.sources}
+                            <strong>Data Intelligence:</strong> {result.threat_level.sources}
                           </p>
                         </div>
                       )}
@@ -498,7 +516,9 @@ export default function Home() {
               {/* Card 2: AI Co-Pilot */}
               <div className="result-card">
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-                  <div className="section-icon" style={{ background: "rgba(34,211,238,0.1)" }}>🤖</div>
+                  <div className="section-icon" style={{ background: "rgba(34,211,238,0.1)" }}>
+                    <Bot color="#22d3ee" size={20} />
+                  </div>
                   <h3 style={{ fontSize: "1.3rem", fontWeight: 700 }}>AI Co-Pilot</h3>
                 </div>
                 <p style={{ color: "#94a3b8", lineHeight: 1.7, marginBottom: 20, fontSize: "0.95rem" }}>
@@ -506,8 +526,10 @@ export default function Home() {
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {result.ai_copilot.tools.map((tool, i) => (
-                    <div key={i} className="tool-badge" style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                      <CategoryIcon category={tool.category} />
+                    <div key={i} className="tool-badge" style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                      <div style={{ color: "#22d3ee", marginTop: 2 }}>
+                        <CategoryIcon category={tool.category} />
+                      </div>
                       <div>
                         <div style={{ fontWeight: 600, color: "#e2e8f0", fontSize: "0.9rem" }}>{tool.name}</div>
                         <div style={{ color: "#94a3b8", fontSize: "0.8rem", marginTop: 2 }}>{tool.description}</div>
@@ -520,7 +542,9 @@ export default function Home() {
               {/* Card 3: Human Edge */}
               <div className="result-card">
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-                  <div className="section-icon" style={{ background: "rgba(168,85,247,0.1)" }}>✨</div>
+                  <div className="section-icon" style={{ background: "rgba(168,85,247,0.1)" }}>
+                    <Sparkles color="#a855f7" size={20} />
+                  </div>
                   <h3 style={{ fontSize: "1.3rem", fontWeight: 700 }}>Human Edge</h3>
                 </div>
                 <p style={{ color: "#94a3b8", lineHeight: 1.7, marginBottom: 20, fontSize: "0.95rem", fontStyle: "italic" }}>
@@ -528,8 +552,10 @@ export default function Home() {
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {result.human_edge.skills.map((skill, i) => (
-                    <div key={i} className="skill-chip">
-                      <span style={{ fontSize: "1.3rem", marginTop: 2 }}><SkillIcon icon={skill.icon} /></span>
+                    <div key={i} className="skill-chip" style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                      <div style={{ color: "#a855f7", marginTop: 2 }}>
+                        <SkillIcon icon={skill.icon} />
+                      </div>
                       <div>
                         <div style={{ fontWeight: 600, color: "#e2e8f0", fontSize: "0.9rem" }}>{skill.name}</div>
                         <div style={{ color: "#94a3b8", fontSize: "0.8rem", marginTop: 2 }}>{skill.description}</div>
@@ -542,7 +568,9 @@ export default function Home() {
               {/* Card 4: Survival Roadmap */}
               <div className="result-card" style={{ gridColumn: "1 / -1" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-                  <div className="section-icon" style={{ background: "rgba(16,185,129,0.1)" }}>🗺️</div>
+                  <div className="section-icon" style={{ background: "rgba(16,185,129,0.1)" }}>
+                    <Map color="#10b981" size={20} />
+                  </div>
                   <h3 style={{ fontSize: "1.3rem", fontWeight: 700 }}>Survival Roadmap</h3>
                 </div>
                 <div>
@@ -563,8 +591,11 @@ export default function Home() {
             </div>
 
             {/* Footer disclaimer */}
-            <div className="fade-in" style={{ textAlign: "center", marginTop: 40, padding: "20px", color: "#64748b", fontSize: "0.8rem" }}>
-              <p>⚡ Analysis powered by Google Gemini AI. Results are AI-generated estimates based on current industry trends.</p>
+            <div className="fade-in" style={{ textAlign: "center", marginTop: 40, padding: "20px", color: "#64748b", fontSize: "0.8rem", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Zap size={14} color="#6366f1" /> 
+                Analysis powered by Google Gemini AI. Results are AI-generated estimates based on current industry trends.
+              </div>
               <p style={{ marginTop: 4 }}>Engineered by <strong>Deyafa Arsetya</strong> ⚡ for <strong>Hoobit Hacks 2026</strong></p>
             </div>
           </div>
@@ -575,12 +606,12 @@ export default function Home() {
           <footer className="fade-in" style={{ textAlign: "center", padding: "60px 20px 40px", color: "#64748b" }}>
             <div style={{ display: "flex", justifyContent: "center", gap: 32, flexWrap: "wrap", marginBottom: 20 }}>
               {[
-                { icon: "⚡", label: "Instant Analysis", desc: "Results in seconds" },
-                { icon: "🧠", label: "AI-Powered", desc: "Google Gemini" },
-                { icon: "🎯", label: "Data-Informed", desc: "Based on trends" },
+                { icon: <Zap size={32} color="#6366f1" />, label: "Instant Analysis", desc: "Results in seconds" },
+                { icon: <Brain size={32} color="#22d3ee" />, label: "AI-Powered", desc: "Google Gemini" },
+                { icon: <Target size={32} color="#10b981" />, label: "Data-Informed", desc: "Based on trends" },
               ].map((f, i) => (
-                <div key={i} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "2rem", marginBottom: 8 }}>{f.icon}</div>
+                <div key={i} style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <div style={{ marginBottom: 12, opacity: 0.8 }}>{f.icon}</div>
                   <div style={{ fontWeight: 600, color: "#e2e8f0", fontSize: "0.9rem" }}>{f.label}</div>
                   <div style={{ fontSize: "0.8rem" }}>{f.desc}</div>
                 </div>
