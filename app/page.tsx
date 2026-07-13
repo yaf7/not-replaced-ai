@@ -302,18 +302,17 @@ export default function Home() {
 
       {/* Header Nav */}
       <nav style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "20px 40px", display: "flex", justifyContent: "space-between", zIndex: 10 }}>
-        <div style={{ fontWeight: 800, fontSize: "1.3rem", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ fontWeight: 800, fontSize: "1.3rem", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 10 }}>
           <img 
             src="/logo-notreplaced-ai.png" 
             alt="NotReplaced Logo" 
             style={{ 
-              width: 44, 
-              height: 44, 
+              width: 32, 
+              height: 32, 
               objectFit: "contain",
-              mixBlendMode: "screen", // Menghilangkan background hitam!
-              filter: "drop-shadow(0 0 10px rgba(34, 211, 238, 0.5))" // Menambah efek glow
+              mixBlendMode: "screen" // Menghilangkan background hitam
             }} 
-          /> 
+          />
           <div>NotReplaced<span style={{ color: "#6366f1" }}>.ai</span></div>
         </div>
         <button 
